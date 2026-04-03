@@ -1,16 +1,11 @@
 version: "3.9"
 
 services:
-  qr-scanner:
-    image: node:20
+  draza:
+    build: .
+    image: draza:1.0.0  # Taguj svoj imidž
     container_name: wwwsql
-    working_dir: /app
-
-    volumes:
-      - ./:/app
-
-    command: ["node", "server.js"]
-
-  
+    restart: always          # Bitno za produkciju
     ports:
       - "3000:3000"
+    # U produkciji nema volumena za kod, samo za logove ili bazu ako treba
