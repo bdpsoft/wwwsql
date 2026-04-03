@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Procedures</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💾</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1><i class="fas fa-database"></i> Database Procedures</h1>
+            <p class="subtitle">Test and execute stored procedures with JSON validation</p>
+            
+            <div class="system-status" id="systemStatus">
+                <div class="loader"></div>
+            </div>
+            
+            <div id="proceduresList" class="procedures-list">
+                <div class="message info">
+                    <i class="fas fa-spinner fa-spin"></i> Loading procedures...
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <h3><i class="fas fa-flask"></i> Test Procedure</h3>
+                <div class="test-controls">
+                    <select id="procedureSelect" class="form-control">
+                        <option value="">Select a procedure...</option>
+                    </select>
+                    
+                    <div class="form-group">
+                        <label for="jsonInput"><i class="fas fa-code"></i> JSON Input Parameters</label>
+                        <textarea id="jsonInput" rows="8" placeholder='{
+  "param1": "value1",
+  "param2": "value2"
+}'></textarea>
+                        <div class="form-hint">Enter valid JSON or leave empty for default values</div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button id="testBtn" onclick="proceduresApp.testProcedure()">
+                            <i class="fas fa-play"></i>
+                            <span id="testBtnText">Execute Procedure</span>
+                            <span id="testBtnLoader" class="loader hidden"></span>
+                        </button>
+                        
+                        <button id="validateBtn" class="button-secondary" onclick="proceduresApp.validateJson()">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="validateBtnText">Validate JSON</span>
+                            <span id="validateBtnLoader" class="loader hidden"></span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="testResult" class="test-result hidden"></div>
+            </div>
+            
+            <div class="actions">
+                <button onclick="window.location.href = '/dashboard'" class="button-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                
+                <button onclick="window.location.href = '/'" class="logout-btn">
+                    <i class="fas fa-home"></i> Home
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="procedures.js"></script>
+</body>
+</html>

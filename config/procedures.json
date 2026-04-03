@@ -1,0 +1,352 @@
+{
+  "procedures": {
+    "GetUserProfile": {
+      "description": "Vraća korisnički profil na osnovu email-a",
+      "allowed": true,
+      "jsonSchema": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "description": "ID korisnika (opciono)",
+            "default": null
+          },
+          "includeSettings": {
+            "type": "boolean",
+            "description": "Da li uključiti podešavanja",
+            "default": false
+          },
+          "language": {
+            "type": "string",
+            "description": "Jezik za lokalizaciju",
+            "enum": ["sr", "en", "de", "fr"],
+            "default": "sr"
+          }
+        },
+        "additionalProperties": false,
+        "required": []
+      },
+      "defaultData": [
+        {
+          "id": 1,
+          "email": "demo@example.com",
+          "firstName": "Petar",
+          "lastName": "Petrović",
+          "createdAt": "2023-01-15T10:30:00",
+          "status": "active",
+          "settings": {
+            "theme": "light",
+            "notifications": true
+          }
+        }
+      ],
+      "responseSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "integer" },
+            "email": { "type": "string", "format": "email" },
+            "firstName": { "type": "string" },
+            "lastName": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "status": { "type": "string", "enum": ["active", "inactive", "pending"] },
+            "settings": {
+              "type": "object",
+              "properties": {
+                "theme": { "type": "string" },
+                "notifications": { "type": "boolean" }
+              }
+            }
+          },
+          "required": ["id", "email", "firstName", "lastName"]
+        }
+      }
+    },
+
+    "GetUserOrders": {
+      "description": "Vraća porudžbine korisnika",
+      "allowed": true,
+      "jsonSchema": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Početni datum (YYYY-MM-DD)",
+            "default": null
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Završni datum (YYYY-MM-DD)",
+            "default": null
+          },
+          "status": {
+            "type": "string",
+            "enum": ["all", "pending", "completed", "cancelled"],
+            "default": "all"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": []
+      },
+      "defaultData": [
+        {
+          "orderId": 1001,
+          "orderNumber": "ORD-2023-001",
+          "orderDate": "2023-05-15T14:30:00",
+          "totalAmount": 12500.50,
+          "currency": "RSD",
+          "status": "completed",
+          "items": [
+            {
+              "productId": 45,
+              "productName": "Laptop",
+              "quantity": 1,
+              "price": 12000.00
+            },
+            {
+              "productId": 78,
+              "productName": "Miš",
+              "quantity": 1,
+              "price": 500.50
+            }
+          ]
+        },
+        {
+          "orderId": 1002,
+          "orderNumber": "ORD-2023-002",
+          "orderDate": "2023-06-20T10:15:00",
+          "totalAmount": 3500.00,
+          "currency": "RSD",
+          "status": "pending",
+          "items": [
+            {
+              "productId": 23,
+              "productName": "Tastatura",
+              "quantity": 2,
+              "price": 1750.00
+            }
+          ]
+        }
+      ],
+      "responseSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "orderId": { "type": "integer" },
+            "orderNumber": { "type": "string" },
+            "orderDate": { "type": "string", "format": "date-time" },
+            "totalAmount": { "type": "number" },
+            "currency": { "type": "string" },
+            "status": { "type": "string", "enum": ["pending", "completed", "cancelled", "processing"] },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "productId": { "type": "integer" },
+                  "productName": { "type": "string" },
+                  "quantity": { "type": "integer", "minimum": 1 },
+                  "price": { "type": "number", "minimum": 0 }
+                },
+                "required": ["productId", "productName", "quantity", "price"]
+              }
+            }
+          },
+          "required": ["orderId", "orderNumber", "orderDate", "totalAmount", "status"]
+        }
+      }
+    },
+
+    "GetNotifications": {
+      "description": "Vraća notifikacije za korisnika",
+      "allowed": true,
+      "jsonSchema": {
+        "type": "object",
+        "properties": {
+          "unreadOnly": {
+            "type": "boolean",
+            "default": false
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 20
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["info", "warning", "success", "error"]
+            },
+            "default": ["info", "warning", "success", "error"]
+          }
+        },
+        "additionalProperties": false,
+        "required": []
+      },
+      "defaultData": [
+        {
+          "notificationId": 1,
+          "title": "Dobrodošli",
+          "message": "Uspešno ste se prijavili u sistem.",
+          "type": "success",
+          "createdAt": "2023-07-10T09:00:00",
+          "read": true
+        },
+        {
+          "notificationId": 2,
+          "title": "Novi dokument",
+          "message": "Imate novi dokument za pregled.",
+          "type": "info",
+          "createdAt": "2023-07-11T14:30:00",
+          "read": false
+        },
+        {
+          "notificationId": 3,
+          "title": "Upozorenje",
+          "message": "Vaša pretplata ističe za 7 dana.",
+          "type": "warning",
+          "createdAt": "2023-07-12T16:45:00",
+          "read": false
+        }
+      ],
+      "responseSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "notificationId": { "type": "integer" },
+            "title": { "type": "string" },
+            "message": { "type": "string" },
+            "type": { "type": "string", "enum": ["info", "warning", "success", "error"] },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "read": { "type": "boolean" }
+          },
+          "required": ["notificationId", "title", "message", "type", "createdAt", "read"]
+        }
+      }
+    },
+
+    "GetReports": {
+      "description": "Generiše izveštaje za korisnika",
+      "allowed": false,
+      "jsonSchema": {
+        "type": "object",
+        "properties": {
+          "reportType": {
+            "type": "string",
+            "enum": ["monthly", "quarterly", "yearly"],
+            "default": "monthly"
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2020,
+            "maximum": 2030,
+            "default": 2023
+          },
+          "format": {
+            "type": "string",
+            "enum": ["summary", "detailed"],
+            "default": "summary"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["reportType", "year"]
+      },
+      "defaultData": [
+        {
+          "reportId": "RPT-2023-07",
+          "period": "2023-07",
+          "totalOrders": 45,
+          "totalRevenue": 234500.75,
+          "averageOrder": 5211.13,
+          "topProduct": "Laptop Pro",
+          "growth": 12.5
+        }
+      ],
+      "responseSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "reportId": { "type": "string" },
+            "period": { "type": "string" },
+            "totalOrders": { "type": "integer" },
+            "totalRevenue": { "type": "number" },
+            "averageOrder": { "type": "number" },
+            "topProduct": { "type": "string" },
+            "growth": { "type": "number" }
+          },
+          "required": ["reportId", "period", "totalOrders", "totalRevenue"]
+        }
+      }
+    },
+
+    "GetSystemStats": {
+      "description": "Vraća statistike sistema za administraciju",
+      "allowed": false,
+      "jsonSchema": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "enum": ["day", "week", "month", "year"],
+            "default": "day"
+          }
+        },
+        "additionalProperties": false,
+        "required": []
+      },
+      "defaultData": [
+        {
+          "totalUsers": 145,
+          "activeUsers": 89,
+          "totalOrders": 1245,
+          "revenue": 1256000.50,
+          "averageSession": "00:12:45",
+          "lastUpdated": "2023-07-15T10:30:00"
+        }
+      ],
+      "responseSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "totalUsers": { "type": "integer" },
+            "activeUsers": { "type": "integer" },
+            "totalOrders": { "type": "integer" },
+            "revenue": { "type": "number" },
+            "averageSession": { "type": "string" },
+            "lastUpdated": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  },
+
+  "globalSettings": {
+    "maxJsonSize": 1048576,
+    "defaultResponseLimit": 1000,
+    "allowedEmailDomains": [],
+    "logLevel": "info",
+    "cacheDuration": 300,
+    "version": "1.0.0",
+    "lastUpdated": "2023-07-15"
+  }
+}

@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threaded App Sticky</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --dark: #2c3e50;
+            --bg: #f4f7f6;
+            --gray: #95a5a6;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --text: #333333;
+            --card-bg: white;
+            --header-bg: #2c3e50;
+            --header-text: white;
+            --border: #e0e0e0;
+            --shadow: rgba(0,0,0,0.05);
+            --reply-bg: #e8f4fc;
+            --reply-text: #2c3e50;
+        }
+
+        .dark-theme {
+            --primary: #3498db;
+            --dark: #121212;
+            --bg: #1a1a1a;
+            --gray: #777777;
+            --success: #27ae60;
+            --danger: #c0392b;
+            --warning: #e67e22;
+            --text: #f0f0f0;
+            --card-bg: #2d2d2d;
+            --header-bg: #1a1a1a;
+            --header-text: #f0f0f0;
+            --border: #444444;
+            --shadow: rgba(0,0,0,0.3);
+            --reply-bg: #2a3b4d;
+            --reply-text: #e0e0e0;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* LOGIN MODAL */
+        #loginModal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #loginModal.hidden {
+            display: none;
+        }
+
+        .login-content {
+            background: var(--card-bg);
+            padding: 40px 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .login-content h2 {
+            margin: 0 0 20px 0;
+            color: var(--text);
+        }
+
+        #loginNameInput {
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            box-sizing: border-box;
+            background: var(--card-bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        #loginNameInput:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-login:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        header {
+            background: var(--header-bg);
+            color: var(--header-text);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            flex-shrink: 0;
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .user-menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px var(--shadow);
+            min-width: 150px;
+            z-index: 1100;
+            border: 1px solid var(--border);
+        }
+        
+        .user-menu div {
+            padding: 12px;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-menu div:hover {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .user-menu div i {
+            font-size: 14px;
+        }
+        
+        .dropdown {
+            position: relative;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px var(--shadow);
+            min-width: 180px;
+            z-index: 1100;
+            border: 1px solid var(--border);
+        }
+        
+        .dropdown-menu div {
+            padding: 12px;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+        
+        .dropdown-menu div:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        main {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 80px;
+            scroll-behavior: smooth;
+        }
+        
+        /* --- KARTICE --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 4px var(--shadow);
+            position: relative;
+            border-left: 4px solid var(--primary);
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+        }
+
+        .card.sticky-main { 
+            position: sticky; 
+            top: 0; 
+            z-index: 500; 
+            box-shadow: 0 4px 10px var(--shadow); 
+            margin-bottom: 10px;
+        }
+
+        .card.closed { opacity: 0.6; border-left-color: var(--gray); }
+        .card.hidden-mode { border-left-color: var(--warning); background: var(--warning); opacity: 0.1; }
+        .card.hidden-mode:hover { opacity: 0.8; }
+        .card.reply-view { margin-left: 15px; border-left: 2px solid var(--border); }
+        
+        .card-meta {
+            font-size: 11px;
+            color: var(--gray);
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .action-icon {
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+            color: var(--gray);
+            transition: color 0.2s;
+        }
+        
+        .action-icon:hover {
+            color: var(--primary);
+        }
+        
+        .reply-preview {
+            margin-top: 10px;
+            padding: 12px;
+            background: var(--reply-bg);
+            border-radius: 8px;
+            font-size: 13px;
+            border-left: 3px solid var(--primary);
+            color: var(--reply-text);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .reply-preview:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        .reply-preview strong {
+            color: inherit;
+            font-weight: 600;
+        }
+
+        .reply-count {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--success);
+            color: white;
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .btn-status {
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            font-weight: bold;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-status:hover {
+            opacity: 0.9;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--header-text);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 8px;
+            margin-right: 10px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* NOVI UNOS PORUKE - U DNU EKRANA */
+        .message-input-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 12px 15px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            box-shadow: 0 -2px 10px var(--shadow);
+        }
+        
+        .message-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        #messageInput {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            box-sizing: border-box;
+            resize: none;
+            min-height: 40px;
+            max-height: 120px;
+            line-height: 1.4;
+        }
+        
+        #messageInput:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .message-input-info {
+            font-size: 11px;
+            color: var(--gray);
+            margin-top: 4px;
+            margin-left: 15px;
+        }
+        
+        .message-input-info strong {
+            color: var(--primary);
+        }
+        
+        .send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+            background: var(--success);
+            transform: scale(1.05);
+        }
+        
+        .send-btn:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .cancel-reply-btn {
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px;
+            margin-left: 5px;
+        }
+        
+        .cancel-reply-btn:hover {
+            color: var(--danger);
+        }
+        
+        .reply-indicator {
+            background: var(--reply-bg);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid var(--primary);
+        }
+        
+        /* STILOVI ZA LOGIN FORM */
+        #loginUserSelect {
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            box-sizing: border-box;
+            background: var(--card-bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        #loginUserSelect:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+    </style>
+</head>
+<body onload="initApp()">
+
+    <!-- LOGIN MODAL -->
+    <div id="loginModal">
+        <div class="login-content">
+            <h2>Dobrodošli!</h2>
+            <p style="color: var(--gray); margin-bottom: 20px; font-size: 14px;">Izaberite korisnika ili kreirajte novog:</p>
+            <select id="loginUserSelect">
+                <option value="">-- Izaberite korisnika --</option>
+            </select>
+            <input type="text" id="loginNameInput" placeholder="Unesite novo ime korisnika" maxlength="30" style="display:none;">
+            <div style="display:flex; gap:10px;">
+                <button class="btn-login" id="loginBtn" onclick="saveUserName()" disabled>Nastavi</button>
+                <button class="btn-login" id="newUserBtn" onclick="showNewUser()" style="background:var(--success);">Novi</button>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <i class="fas fa-arrow-left" id="backBtn" style="display:none; cursor:pointer;" onclick="closeThread()"></i>
+            <div class="dropdown" onclick="toggleGroupMenu()">
+                <span id="activeGroupName">Grupa</span> <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                <div id="groupMenu" class="dropdown-menu"></div>
+            </div>
+        </div>
+        <div class="header-user" onclick="toggleUserMenu()">
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme(event)">
+                <i class="fas fa-moon"></i>
+            </button>
+            <span id="currentUserName" style="font-weight: 500;"></span>
+            <i class="fas fa-user-circle fa-2x"></i>
+            <div id="userMenu" class="user-menu">
+                <div onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Odjavi se
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="container"></main>
+
+    <!-- NOVI UNOS PORUKE - STALNO PRIKAZAN -->
+    <div id="messageInputFooter" class="message-input-container" style="display: none;">
+        <div class="message-input-wrapper">
+            <div id="replyIndicator" class="reply-indicator" style="display: none;">
+                <span id="replyToText">Odgovaraš na poruku...</span>
+                <button class="cancel-reply-btn" onclick="cancelReply()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <textarea 
+                id="messageInput" 
+                placeholder="Unesi poruku..." 
+                rows="1"
+                oninput="autoResize(this)"
+                onkeydown="handleKeyDown(event)"
+            ></textarea>
+            <div class="message-input-info" id="messageInfo">
+                Pišete kao <strong id="currentUserDisplay"></strong> u grupi <strong id="currentGroupDisplay"></strong>
+            </div>
+        </div>
+        <button id="sendBtn" class="send-btn" onclick="sendMessage()" disabled>
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+
+    <script>
+        let currentThreadId = null;
+        let showHiddenMode = false;
+        let currentUserId = null;
+        let currentUserName = '';
+        let groups = [];
+        let users = [];
+        let replyToMessageId = null;
+
+        function initApp() {
+            //obriši default usera, da bi moglo ponovno logovanje, ne radi auto login
+            localStorage.removeItem('current_user_uuid');
+            loadData();
+            checkLogin();
+        }
+
+        function loadData() {
+            // Učitaj grupe
+            let storedGroups = localStorage.getItem('groups');
+            if (!storedGroups) {
+                groups = [
+                    { uuid: 'g1', name: 'Marketing', users: ['u1', 'u2'] },
+                    { uuid: 'g2', name: 'Dizajn', users: ['u2', 'u3'] },
+                    { uuid: 'g3', name: 'Razvoj', users: ['u1', 'u3', 'u4'] },
+                    { uuid: 'g4', name: 'Opšte', users: ['u1', 'u2', 'u3', 'u4'] }
+                ];
+                localStorage.setItem('groups', JSON.stringify(groups));
+            } else {
+                groups = JSON.parse(storedGroups);
+            }
+
+            // Učitaj korisnike
+            let storedUsers = localStorage.getItem('users');
+            if (!storedUsers) {
+                users = [
+                    { uuid: 'u1', title: 'Ana' },
+                    { uuid: 'u2', title: 'Marko' },
+                    { uuid: 'u3', title: 'Petar' },
+                    { uuid: 'u4', title: 'Sistem' }
+                ];
+                localStorage.setItem('users', JSON.stringify(users));
+            } else {
+                users = JSON.parse(storedUsers);
+            }
+
+            // Učitaj poruke
+            if (!localStorage.getItem('messages')) {
+                localStorage.setItem('messages', JSON.stringify([
+                    { uuid: 'm1', group_uuid: 'g1', author_uuid: 'u4', text: 'Dobrodošli u aplikaciju! Unesite poruku u polje ispod.', time: '12:00', original_uuid: null, is_closed: false, is_hidden: false },
+                    { uuid: 'm2', group_uuid: 'g1', author_uuid: 'u1', text: 'Unos poruke je sada u dnu ekrana. Automatski koristi trenutnu grupu i korisnika.', time: '12:30', original_uuid: null, is_closed: false, is_hidden: false },
+                    { uuid: 'm3', group_uuid: 'g1', author_uuid: 'u2', text: 'Odgovor na Aninu poruku', time: '12:45', original_uuid: 'm2', is_closed: false, is_hidden: false },
+                    { uuid: 'm4', group_uuid: 'g1', author_uuid: 'u3', text: 'Još jedan odgovor', time: '13:10', original_uuid: 'm2', is_closed: false, is_hidden: false }
+                ]));
+            }
+            
+            if (!localStorage.getItem('current_group_uuid')) {
+                localStorage.setItem('current_group_uuid', groups[0].uuid);
+            }
+        }
+
+        function checkLogin() {
+            currentUserId = localStorage.getItem('current_user_uuid');
+            if (!currentUserId) {
+                showLoginModal();
+                return;
+            }
+            users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.uuid === currentUserId);
+            if (user) {
+                currentUserName = user.title;
+                document.getElementById('currentUserName').textContent = currentUserName;
+                document.getElementById('currentUserDisplay').textContent = currentUserName;
+                const savedTheme = localStorage.getItem('theme') || 'standard';
+                document.body.classList.toggle('dark-theme', savedTheme === 'dark');
+                updateThemeIcon(savedTheme);
+                showMessageInput();
+                render();
+            } else {
+                showLoginModal();
+            }
+        }
+
+        function showLoginModal() {
+            const loginModal = document.getElementById('loginModal');
+            const userSelect = document.getElementById('loginUserSelect');
+            const loginInput = document.getElementById('loginNameInput');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Popuni select sa korisnicima
+            userSelect.innerHTML = '<option value="">-- Izaberite korisnika --</option>';
+            
+            if (users && users.length > 0) {
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.uuid;
+                    option.textContent = user.title;
+                    userSelect.appendChild(option);
+                });
+            } else {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "Nema postojećih korisnika";
+                userSelect.appendChild(option);
+                userSelect.disabled = true;
+            }
+            
+            loginInput.style.display = 'none';
+            userSelect.style.display = 'block';
+            loginModal.classList.remove('hidden');
+            
+            if (userSelect.disabled) {
+                loginBtn.disabled = true;
+                document.getElementById('newUserBtn').focus();
+            } else {
+                userSelect.focus();
+                userSelect.onchange = () => {
+                    loginBtn.disabled = !userSelect.value;
+                };
+            }
+            
+            // Resetuj event listener za unos teksta
+            loginInput.oninput = () => {
+                loginBtn.disabled = loginInput.value.trim().length < 2;
+            };
+        }
+
+        function showNewUser() {
+            const userSelect = document.getElementById('loginUserSelect');
+            const loginInput = document.getElementById('loginNameInput');
+            const loginBtn = document.getElementById('loginBtn');
+            const newUserBtn = document.getElementById('newUserBtn');
+            
+            userSelect.style.display = 'none';
+            loginInput.style.display = 'block';
+            loginInput.value = '';
+            loginBtn.disabled = true;
+            loginInput.focus();
+            
+            // Promeni tekst dugmeta da bude jasnije
+            newUserBtn.textContent = 'Nazad';
+            newUserBtn.onclick = function() {
+                showLoginModal();
+            };
+        }
+
+        function saveUserName() {
+            const userSelect = document.getElementById('loginUserSelect');
+            const loginInput = document.getElementById('loginNameInput');
+            const loginBtn = document.getElementById('loginBtn');
+            const newUserBtn = document.getElementById('newUserBtn');
+            
+            if (loginInput.style.display === 'block') {
+                // Novi korisnik
+                const name = loginInput.value.trim();
+                if (name.length < 2) {
+                    alert("Ime mora imati najmanje 2 karaktera");
+                    return;
+                }
+                
+                const newUser = {
+                    uuid: 'u' + (users.length + 1),
+                    title: name
+                };
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                currentUserId = newUser.uuid;
+                currentUserName = name;
+            } else {
+                // Postojeći korisnik
+                currentUserId = userSelect.value;
+                const user = users.find(u => u.uuid === currentUserId);
+                if (!user) {
+                    alert("Izabrani korisnik nije pronađen");
+                    return;
+                }
+                currentUserName = user.title;
+            }
+            
+            localStorage.setItem('current_user_uuid', currentUserId);
+            document.getElementById('currentUserName').textContent = currentUserName;
+            document.getElementById('currentUserDisplay').textContent = currentUserName;
+            
+            // Resetuj dugme "Novi" na originalno stanje
+            newUserBtn.textContent = 'Novi';
+            newUserBtn.onclick = function() {
+                showNewUser();
+            };
+            
+            document.getElementById('loginModal').classList.add('hidden');
+            
+            const savedTheme = localStorage.getItem('theme') || 'standard';
+            document.body.classList.toggle('dark-theme', savedTheme === 'dark');
+            updateThemeIcon(savedTheme);
+            showMessageInput();
+            render();
+        }
+
+        function showMessageInput() {
+            const footer = document.getElementById('messageInputFooter');
+            footer.style.display = 'flex';
+        }
+
+        function hideMessageInput() {
+            const footer = document.getElementById('messageInputFooter');
+            footer.style.display = 'none';
+        }
+
+        function compareTime(time1, time2) {
+            const [h1, m1] = time1.split(':').map(Number);
+            const [h2, m2] = time2.split(':').map(Number);
+            return (h2 * 60 + m2) - (h1 * 60 + m1);
+        }
+
+        function getLastReplyTime(mainUuid, messages) {
+            const replies = messages.filter(m => m.original_uuid === mainUuid);
+            if (replies.length === 0) {
+                const mainMsg = messages.find(m => m.uuid === mainUuid);
+                return mainMsg ? mainMsg.time : '00:00';
+            }
+            const latestReply = replies.sort((a, b) => compareTime(b.time, a.time))[0];
+            return latestReply.time;
+        }
+
+        function toggleTheme(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const body = document.body;
+            const isDark = body.classList.toggle('dark-theme');
+            const theme = isDark ? 'dark' : 'standard';
+            localStorage.setItem('theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.querySelector('#themeToggle i');
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+                icon.title = 'Prebaci na svetlu temu';
+            } else {
+                icon.className = 'fas fa-moon';
+                icon.title = 'Prebaci na tamnu temu';
+            }
+        }
+
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('userMenu');
+            userMenu.style.display = userMenu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function toggleGroupMenu() {
+            const groupMenu = document.getElementById('groupMenu');
+            if (groupMenu.style.display === 'block') {
+                groupMenu.style.display = 'none';
+            } else {
+                groupMenu.style.display = 'block';
+                renderGroups();
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        function renderGroups() {
+            const menu = document.getElementById('groupMenu');
+            const activeGroupUuid = localStorage.getItem('current_group_uuid');
+            menu.innerHTML = "";
+            
+            groups.forEach(g => {
+                const div = document.createElement('div');
+                div.innerText = g.name;
+                if (g.uuid === activeGroupUuid) {
+                    div.innerHTML = `<i class="fas fa-check"></i> ${g.name}`;
+                }
+                div.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    localStorage.setItem('current_group_uuid', g.uuid); 
+                    showHiddenMode = false; 
+                    currentThreadId = null;
+                    toggleGroupMenu();
+                    render(); 
+                };
+                menu.appendChild(div);
+            });
+            
+            const hiddenOpt = document.createElement('div');
+            hiddenOpt.innerHTML = `<i class="fas fa-eye-slash"></i> Sakriveno`;
+            hiddenOpt.onclick = (e) => { 
+                e.stopPropagation(); 
+                showHiddenMode = true; 
+                toggleGroupMenu();
+                hideMessageInput();
+                render(); 
+            };
+            menu.appendChild(hiddenOpt);
+        }
+
+        function render() {
+            const container = document.getElementById('container');
+            const messages = JSON.parse(localStorage.getItem('messages') || '[]');
+            const activeGroupUuid = localStorage.getItem('current_group_uuid');
+            const groups = JSON.parse(localStorage.getItem('groups') || '[]');
+            const currentGroup = groups.find(g => g.uuid === activeGroupUuid);
+            const groupName = currentGroup ? currentGroup.name : 'Nepoznato';
+            const backBtn = document.getElementById('backBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            const messageInput = document.getElementById('messageInput');
+
+            // Ažuriraj header grupe
+            if (showHiddenMode) {
+                document.getElementById('activeGroupName').textContent = "Sakriveno";
+            } else {
+                document.getElementById('activeGroupName').textContent = groupName;
+            }
+            
+            // Ažuriraj footer informacije o grupi
+            const currentGroupDisplayEl = document.getElementById('currentGroupDisplay');
+            if (currentGroupDisplayEl) {
+                currentGroupDisplayEl.textContent = groupName;
+            }
+            
+            // Ažuriraj poruku u footeru
+            const messageInfoEl = document.getElementById('messageInfo');
+            if (messageInfoEl) {
+                if (currentThreadId) {
+                    messageInfoEl.innerHTML = `Odgovarate u thread-u kao <strong>${currentUserName}</strong>`;
+                } else {
+                    messageInfoEl.innerHTML = `Pišete kao <strong>${currentUserName}</strong> u grupi <strong>${groupName}</strong>`;
+                }
+            }
+
+            container.innerHTML = "";
+
+            // Provera da li je trenutna poruka zatvorena
+            let isCurrentThreadClosed = false;
+            if (currentThreadId) {
+                const threadMsg = messages.find(m => m.uuid === currentThreadId);
+                isCurrentThreadClosed = threadMsg?.is_closed || false;
+            }
+
+            // Onemogući unos ako je thread zatvoren
+            if (currentThreadId && isCurrentThreadClosed) {
+                messageInput.disabled = true;
+                messageInput.placeholder = "Thread je zatvoren. Nije moguće slati nove poruke.";
+                sendBtn.disabled = true;
+            } else {
+                messageInput.disabled = false;
+                messageInput.placeholder = currentThreadId ? "Odgovori na poruku..." : "Unesi poruku...";
+                sendBtn.disabled = messageInput.value.trim() === '';
+            }
+
+            if (currentThreadId) {
+                const mainMsg = messages.find(m => m.uuid === currentThreadId);
+                backBtn.style.display = "block";
+                document.querySelector('.dropdown').style.display = "none";
+                
+                showMessageInput();
+
+                const mainCard = createCard(mainMsg, true, messages);
+                mainCard.classList.add('sticky-main');
+                const btn = document.createElement('button');
+                btn.className = 'btn-status';
+                btn.style.backgroundColor = mainMsg.is_closed ? 'var(--success)' : 'var(--danger)';
+                btn.innerHTML = mainMsg.is_closed ? '<i class="fas fa-unlock"></i> Otvori' : '<i class="fas fa-lock"></i> Zatvori';
+                btn.onclick = () => updateMsg(mainMsg.uuid, {is_closed: !mainMsg.is_closed});
+                mainCard.appendChild(btn);
+                container.appendChild(mainCard);
+
+                const replies = messages.filter(m => m.original_uuid === currentThreadId)
+                    .sort((a, b) => compareTime(b.time, a.time));
+                
+                replies.forEach(reply => {
+                    const card = createCard(reply, true, messages);
+                    card.classList.add('reply-view');
+                    
+                    const replyBtn = document.createElement('i');
+                    replyBtn.className = 'fas fa-reply action-icon';
+                    replyBtn.title = 'Odgovori na ovu poruku';
+                    replyBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        setReplyTo(reply.uuid, reply.text);
+                    };
+                    card.querySelector('.card-meta').appendChild(replyBtn);
+                    
+                    container.appendChild(card);
+                });
+            } else {
+                backBtn.style.display = "none";
+                document.querySelector('.dropdown').style.display = "block";
+                
+                if (showHiddenMode) {
+                    hideMessageInput();
+                } else {
+                    showMessageInput();
+                }
+
+                const filtered = messages.filter(m => m.original_uuid === null && 
+                    (showHiddenMode ? m.is_hidden : (!m.is_hidden && m.group_uuid === activeGroupUuid)));
+                
+                filtered.sort((a, b) => {
+                    const timeA = getLastReplyTime(a.uuid, messages);
+                    const timeB = getLastReplyTime(b.uuid, messages);
+                    return compareTime(timeB, timeA);
+                });
+                
+                filtered.forEach(m => {
+                    const card = createCard(m, false, messages);
+                    if (m.is_closed) card.classList.add('closed');
+                    if (showHiddenMode) card.classList.add('hidden-mode');
+                    
+                    const replyBtn = document.createElement('i');
+                    replyBtn.className = 'fas fa-reply action-icon';
+                    replyBtn.title = 'Odgovori na ovu poruku';
+                    replyBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        setReplyTo(m.uuid, m.text);
+                    };
+                    card.querySelector('.card-meta').appendChild(replyBtn);
+                    
+                    const replies = messages.filter(r => r.original_uuid === m.uuid);
+                    if (replies.length > 0) {
+                        const countBadge = document.createElement('div');
+                        countBadge.className = 'reply-count';
+                        countBadge.textContent = replies.length;
+                        card.appendChild(countBadge);
+                        
+                        const last = replies.sort((a, b) => compareTime(b.time, a.time))[0];
+                        const preview = document.createElement('div');
+                        preview.className = 'reply-preview';
+                        preview.innerHTML = `<strong>${getUserName(last.author_uuid, messages)}:</strong> ${last.text.substring(0, 45)}${last.text.length > 45 ? '...' : ''}`;
+                        preview.onclick = (e) => {
+                            e.stopPropagation();
+                            currentThreadId = m.uuid;
+                            render();
+                        };
+                        card.appendChild(preview);
+                    }
+
+                    const hideIcon = document.createElement('i');
+                    hideIcon.className = showHiddenMode ? 'fas fa-eye icon-restore action-icon' : 'fas fa-eye-slash icon-hide action-icon';
+                    hideIcon.title = showHiddenMode ? 'Prikaži poruku' : 'Sakrij poruku';
+                    hideIcon.onclick = (e) => { 
+                        e.stopPropagation(); 
+                        updateMsg(m.uuid, {is_hidden: !m.is_hidden}); 
+                    };
+                    card.querySelector('.card-meta').prepend(hideIcon);
+
+                    container.appendChild(card);
+                });
+            }
+            
+            if (!showHiddenMode) {
+                setTimeout(() => {
+                    document.getElementById('messageInput').focus();
+                }, 100);
+            }
+            
+            if (currentThreadId) {
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 100);
+            }
+        }
+
+        function createCard(m, isThread, messages) {
+            const card = document.createElement('div');
+            card.className = `card ${m.original_uuid && isThread ? 'reply-view' : ''}`;
+            if(!isThread) card.onclick = () => { 
+                currentThreadId = m.uuid; 
+                replyToMessageId = null;
+                document.getElementById('replyIndicator').style.display = 'none';
+                render(); 
+            };
+            
+            const authorName = getUserName(m.author_uuid, messages);
+            card.innerHTML = `
+                <div style="font-weight:500; color:var(--text);">${m.text}</div>
+                <div class="card-meta">
+                    <span style="margin-left:auto">${authorName} • ${m.time}</span>
+                </div>
+            `;
+            return card;
+        }
+
+        function getUserName(userUuid, messages) {
+            const user = users.find(u => u.uuid === userUuid);
+            return user ? user.title : 'Nepoznato';
+        }
+
+        function updateMsg(uuid, props) {
+            const msgs = JSON.parse(localStorage.getItem('messages') || '[]');
+            const idx = msgs.findIndex(m => m.uuid === uuid);
+            if (idx !== -1) {
+                msgs[idx] = {...msgs[idx], ...props};
+                localStorage.setItem('messages', JSON.stringify(msgs));
+            }
+            render();
+        }
+
+        function sendMessage() {
+            const text = document.getElementById('messageInput').value.trim();
+            if (!text) return;
+            
+            const activeGroupUuid = localStorage.getItem('current_group_uuid');
+            const msgs = JSON.parse(localStorage.getItem('messages') || '[]');
+            
+            let original_uuid = null;
+            if (currentThreadId) {
+                original_uuid = currentThreadId;
+            }
+            
+            const newMessage = {
+                uuid: 'm' + (msgs.length + 1),
+                group_uuid: activeGroupUuid,
+                original_uuid: original_uuid,
+                text: text,
+                author_uuid: currentUserId,
+                time: new Date().getHours().toString().padStart(2,'0')+":"+new Date().getMinutes().toString().padStart(2,'0'),
+                is_closed: false,
+                is_hidden: false
+            };
+            
+            msgs.push(newMessage);
+            localStorage.setItem('messages', JSON.stringify(msgs));
+            
+            document.getElementById('messageInput').value = '';
+            autoResize(document.getElementById('messageInput'));
+            document.getElementById('sendBtn').disabled = true;
+            
+            replyToMessageId = null;
+            document.getElementById('replyIndicator').style.display = 'none';
+            
+            render();
+        }
+
+        function setReplyTo(messageId, messageText) {
+            replyToMessageId = messageId;
+            const replyIndicator = document.getElementById('replyIndicator');
+            const replyToText = document.getElementById('replyToText');
+            
+            const shortText = messageText.length > 50 ? messageText.substring(0, 47) + '...' : messageText;
+            replyToText.textContent = `Odgovaraš na: "${shortText}"`;
+            replyIndicator.style.display = 'flex';
+            
+            document.getElementById('messageInput').focus();
+        }
+
+        function cancelReply() {
+            replyToMessageId = null;
+            document.getElementById('replyIndicator').style.display = 'none';
+        }
+
+        function closeThread() { 
+            currentThreadId = null; 
+            replyToMessageId = null;
+            document.getElementById('replyIndicator').style.display = 'none';
+            render(); 
+        }
+        
+        window.onclick = (e) => { 
+            if(!e.target.closest('.dropdown')) { 
+                const m = document.getElementById('groupMenu'); 
+                if(m) m.style.display='none'; 
+            }
+            if(!e.target.closest('.header-user')) { 
+                const userMenu = document.getElementById('userMenu'); 
+                if(userMenu) userMenu.style.display='none'; 
+            }
+        }
+        
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+            
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = textarea.value.trim() === '';
+        }
+        
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.addEventListener('input', function() {
+                    autoResize(this);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
