@@ -5,8 +5,7 @@ const path = require('path');
 const helmet = require('helmet'); 
 require('dotenv').config();
 
-// --- NEW SESSION/REDIS IMPORTS ---
-const RedisStore = require('connect-redis')(session);
+const { RedisStore } = require('connect-redis');
 const Redis = require('ioredis');
 
 const dbHelper = require('./helpers/db');
@@ -43,20 +42,23 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- 2. Session configuration using RedisStore ---
+// --- 2. Session configuration using RedisStore ---
 app.use(session({
-    // Use the Redis store
-    store: new RedisStore({ client: redisClient }), 
-    secret: process.env.SESSION_SECRET,
+    // Pravilna instanca
+    store: new RedisStore({ 
+        client: redisClient,
+        prefix: "sess:" // Dobra praksa da se lakše snađeš u Redis bazi
+    }), 
+    secret: process.env.SESSION_SECRET || 'neka-fallback-sifra', // Uvek imaj fallback
     resave: false,
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         maxAge: parseInt(process.env.SESSION_COOKIE_MAX_AGE) || 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: 'strict'
+        sameSite: 'lax' // Promeni na 'lax' ako imaš problema sa redirect-om na localhostu
     }
 }));
-
 // Request logging middleware
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
