@@ -18,7 +18,11 @@ const PORT = process.env.PORT || 3000;
 // Assuming Redis connection details are in environment variables
 const redisClient = new Redis({
     host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379
+    port: process.env.REDIS_PORT || 6379,
+    retryStrategy(times) {
+        const delay = Math.min(times * 50, 2000);
+        return delay; // Pokušavaj ponovo na svake 2 sekunde
+    }
 });
 
 // Test Redis connection on startup
@@ -30,6 +34,15 @@ redisClient.ping()
         console.error('❌ Redis connection failed. Ensure Redis is running and accessible.', err);
     });
 
+// Spreči "Unhandled error event" koji ti ruši aplikaciju
+redisClient.on('error', (err) => {
+// Pristupamo opcijama direktno preko klijenta
+    const host = redisClient.options.host;
+    const port = redisClient.options.port;
+    
+    console.error(`❌ Redis klijent pokušava povezivanje na [${host}:${port}]`);
+    console.error(`   Greška: ${err.message}`);
+});
 
 // Middleware
 app.use(cors({
