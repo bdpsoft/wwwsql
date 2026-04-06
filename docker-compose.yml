@@ -1,11 +1,43 @@
 version: "3.9"
 
 services:
+  # 1. The main application service
   draza:
     build: .
-    image: draza:1.0.0  # Taguj svoj imidž
-    container_name: wwwsql
-    restart: always          # Bitno za produkciju
+    image: draza:1.0.0
+    container_name: draza_app
+    restart: always
     ports:
       - "3000:3000"
-    # U produkciji nema volumena za kod, samo za logove ili bazu ako treba
+    depends_on:
+      - db
+      - redis
+    # NOTE: The application will now connect to 'db' and 'redis' services defined below.
+
+  # 2. PostgreSQL Database Service
+  db:
+    image: postgres:14-alpine
+    container_name: draza_db
+    restart: always
+    environment:
+      POSTGRES_USER: draza_user
+      POSTGRES_PASSWORD: your_db_password # Must match the password in the draza service
+      POSTGRES_DB: draza_db
+    volumes:
+      # Persist database data
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Expose DB port (optional, but useful for debugging)
+
+  # 3. Redis Session Store Service
+  redis:
+    image: redis:6-alpine
+    container_name: draza_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    # Redis runs independently and is accessible via the service name 'redis'
+
+# Define volumes for persistent data
+volumes:
+  postgres_data:

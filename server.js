@@ -2,14 +2,35 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
-const helmet = require('helmet'); // npm i helmet express-rate-limit
+const helmet = require('helmet'); 
 require('dotenv').config();
+
+// --- NEW SESSION/REDIS IMPORTS ---
+const RedisStore = require('connect-redis')(session);
+const Redis = require('ioredis');
 
 const dbHelper = require('./helpers/db');
 const authService = require('./services/authService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// --- 1. Initialize Redis Client ---
+// Assuming Redis connection details are in environment variables
+const redisClient = new Redis({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379
+});
+
+// Test Redis connection on startup
+redisClient.ping()
+    .then(() => {
+        console.log('✅ Redis connection successful');
+    })
+    .catch(err => {
+        console.error('❌ Redis connection failed. Ensure Redis is running and accessible.', err);
+    });
+
 
 // Middleware
 app.use(cors({
@@ -21,8 +42,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Session configuration
+// --- 2. Session configuration using RedisStore ---
 app.use(session({
+    // Use the Redis store
+    store: new RedisStore({ client: redisClient }), 
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -51,6 +74,7 @@ dbHelper.testConnection().then(isConnected => {
 
 // Authentication middleware
 const requireAuth = (req, res, next) => {
+    // Accessing session data remains the same
     if (req.session && req.session.user) {
         next();
     } else {
@@ -61,7 +85,7 @@ const requireAuth = (req, res, next) => {
     }
 };
 
-// ==================== ROUTES ====================
+// ==================== ROUTES (No changes needed here) ====================
 
 // 1. Health check
 app.get('/api/health', (req, res) => {
