@@ -1,9 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const path = require('path');
 const helmet = require('helmet'); 
-require('dotenv').config();
 
 const { RedisStore } = require('connect-redis');
 const Redis = require('ioredis');
@@ -15,13 +15,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- 1. Initialize Redis Client ---
+const redisAddress = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
+console.log(`🔍 DEBUG: Pokušavam povezivanje na: ${redisAddress.replace(/:[^:]*@/, ':****@')}`); // Sakriva lozinku u logu
+
 // Assuming Redis connection details are in environment variables
-const redisClient = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379,
+const redisClient = new Redis(redisAddress, {
+    maxRetriesPerRequest: null, // Veoma bitno: sprečava pucanje aplikacije ako Redis štuca
     retryStrategy(times) {
         const delay = Math.min(times * 50, 2000);
-        return delay; // Pokušavaj ponovo na svake 2 sekunde
+        return delay;
     }
 });
 
@@ -37,10 +39,9 @@ redisClient.ping()
 // Spreči "Unhandled error event" koji ti ruši aplikaciju
 redisClient.on('error', (err) => {
 // Pristupamo opcijama direktno preko klijenta
-    const host = redisClient.options.host;
-    const port = redisClient.options.port;
+    const url = redisClient.options.url;
     
-    console.error(`❌ Redis klijent pokušava povezivanje na [${host}:${port}]`);
+    console.error(`❌ Redis klijent pokušava povezivanje na [${url}]`);
     console.error(`   Greška: ${err.message}`);
 });
 
